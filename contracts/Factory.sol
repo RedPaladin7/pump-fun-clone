@@ -88,6 +88,7 @@ contract Factory {
     }
 
     function deposit(address _token) external {
+        // regardless of who calls the deposit function, the remaining tokens are sent back to the creator
         Token token = Token(_token);
         TokenSale memory sale = tokenToSale[_token];
 
@@ -95,6 +96,14 @@ contract Factory {
         token.transfer(sale.creator, token.balanceOf(address(this)));
 
         (bool success, ) = payable(sale.creator).call{value: sale.raised}("");
+        require(success, "Factory: ETH transfer failed");
+    }
+
+    function withdraw(uint256 _amount) external{
+        // function to let the factory owner withrdaw the listing fees
+        require(msg.sender == owner, "Factory: Not owner");
+
+        (bool success, ) = payable(owner).call{value: _amount}("");
         require(success, "Factory: ETH transfer failed");
     }
 }
